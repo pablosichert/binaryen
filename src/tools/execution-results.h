@@ -96,41 +96,41 @@ struct ExecutionResults {
   // get results of execution
   void get(Module& wasm) {
     LoggingExternalInterface interface(loggings);
-    try {
-      ModuleInstance instance(wasm, &interface);
-      // execute all exported methods (that are therefore preserved through
-      // opts)
-      for (auto& exp : wasm.exports) {
-        if (exp->kind != ExternalKind::Function) {
-          continue;
-        }
-        std::cout << "[fuzz-exec] calling " << exp->name << "\n";
-        auto* func = wasm.getFunction(exp->value);
-        if (func->sig.results != Type::none) {
-          // this has a result
-          Literals ret = run(func, wasm, instance);
-          results[exp->name] = ret;
-          // ignore the result if we hit an unreachable and returned no value
-          if (ret.size() > 0) {
-            std::cout << "[fuzz-exec] note result: " << exp->name << " => ";
-            auto resultType = func->sig.results;
-            if (resultType.isRef()) {
-              // Don't print reference values, as funcref(N) contains an index
-              // for example, which is not guaranteed to remain identical after
-              // optimizations.
-              std::cout << resultType << '\n';
-            } else {
-              std::cout << ret << '\n';
-            }
-          }
-        } else {
-          // no result, run it anyhow (it might modify memory etc.)
-          run(func, wasm, instance);
-        }
+    // try {
+    ModuleInstance instance(wasm, &interface);
+    // execute all exported methods (that are therefore preserved through
+    // opts)
+    for (auto& exp : wasm.exports) {
+      if (exp->kind != ExternalKind::Function) {
+        continue;
       }
-    } catch (const TrapException&) {
-      // may throw in instance creation (init of offsets)
+      std::cout << "[fuzz-exec] calling " << exp->name << "\n";
+      auto* func = wasm.getFunction(exp->value);
+      if (func->sig.results != Type::none) {
+        // this has a result
+        Literals ret = run(func, wasm, instance);
+        results[exp->name] = ret;
+        // ignore the result if we hit an unreachable and returned no value
+        if (ret.size() > 0) {
+          std::cout << "[fuzz-exec] note result: " << exp->name << " => ";
+          auto resultType = func->sig.results;
+          if (resultType.isRef()) {
+            // Don't print reference values, as funcref(N) contains an index
+            // for example, which is not guaranteed to remain identical after
+            // optimizations.
+            std::cout << resultType << '\n';
+          } else {
+            std::cout << ret << '\n';
+          }
+        }
+      } else {
+        // no result, run it anyhow (it might modify memory etc.)
+        run(func, wasm, instance);
+      }
     }
+    // } catch (const TrapException&) {
+    //   // may throw in instance creation (init of offsets)
+    // }
   }
 
   // get current results and check them against previous ones
@@ -210,40 +210,40 @@ struct ExecutionResults {
 
   Literals run(Function* func, Module& wasm) {
     LoggingExternalInterface interface(loggings);
-    try {
-      ModuleInstance instance(wasm, &interface);
-      return run(func, wasm, instance);
-    } catch (const TrapException&) {
-      // may throw in instance creation (init of offsets)
-      return {};
-    }
+    // try {
+    ModuleInstance instance(wasm, &interface);
+    return run(func, wasm, instance);
+    // } catch (const TrapException&) {
+    //   // may throw in instance creation (init of offsets)
+    //   return {};
+    // }
   }
 
   Literals run(Function* func, Module& wasm, ModuleInstance& instance) {
-    try {
-      LiteralList arguments;
-      // init hang support, if present
-      if (auto* ex = wasm.getExportOrNull("hangLimitInitializer")) {
-        instance.callFunction(ex->value, arguments);
-      }
-      // call the method
-      for (const auto& param : func->sig.params) {
-        // zeros in arguments TODO: more?
-        if (!param.isDefaultable()) {
-          std::cout << "[trap fuzzer can only send defaultable parameters to "
-                       "exports]\n";
-        }
-        arguments.push_back(Literal::makeZero(param));
-      }
-      return instance.callFunction(func->name, arguments);
-    } catch (const TrapException&) {
-      return {};
-    } catch (const HostLimitException&) {
-      // This should be ignored and not compared with, as optimizations can
-      // change whether a host limit is reached.
-      ignore = true;
-      return {};
+    // try {
+    LiteralList arguments;
+    // init hang support, if present
+    if (auto* ex = wasm.getExportOrNull("hangLimitInitializer")) {
+      instance.callFunction(ex->value, arguments);
     }
+    // call the method
+    for (const auto& param : func->sig.params) {
+      // zeros in arguments TODO: more?
+      if (!param.isDefaultable()) {
+        std::cout << "[trap fuzzer can only send defaultable parameters to "
+                     "exports]\n";
+      }
+      arguments.push_back(Literal::makeZero(param));
+    }
+    return instance.callFunction(func->name, arguments);
+    // } catch (const TrapException&) {
+    //   return {};
+    // } catch (const HostLimitException&) {
+    //   // This should be ignored and not compared with, as optimizations can
+    //   // change whether a host limit is reached.
+    //   ignore = true;
+    //   return {};
+    // }
   }
 };
 

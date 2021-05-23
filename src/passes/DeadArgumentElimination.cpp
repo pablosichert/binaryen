@@ -76,7 +76,7 @@ struct DAEFunctionInfo {
   // adds the parameter.
   // This is atomic so that we can write to it from any function at any time
   // during the parallel analysis phase which is run in DAEScanner.
-  std::atomic<bool> hasUnseenCalls;
+  bool hasUnseenCalls;
 
   DAEFunctionInfo() { hasUnseenCalls = false; }
 };

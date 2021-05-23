@@ -29,8 +29,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <vector>
 
-#include "support/threads.h"
+// #include "support/threads.h"
 #include "support/utilities.h"
 
 namespace cashew {
@@ -67,42 +68,43 @@ struct IString {
   }
 
   void set(const char* s, bool reuse = true) {
-    typedef std::unordered_set<const char*, CStringHash, CStringEqual>
-      StringSet;
-    // one global store of strings per thread, we must not access this
-    // in parallel
-    thread_local static StringSet strings;
+    // typedef std::unordered_set<const char*, CStringHash, CStringEqual>
+    //   StringSet;
+    // // one global store of strings per thread, we must not access this
+    // // in parallel
+    // thread_local static StringSet strings;
 
-    auto existing = strings.find(s);
+    // auto existing = strings.find(s);
 
-    if (existing == strings.end()) {
-      // if the string isn't already known, we must use a single global
-      // storage location, guarded by a mutex, so each string is allocated
-      // exactly once
-      static std::mutex mutex;
-      std::unique_lock<std::mutex> lock(mutex);
-      // a single global set contains the actual strings, so we allocate each
-      // one exactly once.
-      static StringSet globalStrings;
-      auto globalExisting = globalStrings.find(s);
-      if (globalExisting == globalStrings.end()) {
-        if (!reuse) {
-          static std::vector<std::unique_ptr<std::string>> allocated;
-          allocated.emplace_back(wasm::make_unique<std::string>(s));
-          s = allocated.back()->c_str(); // we'll never modify it, so this is ok
-        }
-        // insert into global set
-        globalStrings.insert(s);
-      } else {
-        s = *globalExisting;
-      }
-      // add the string to our thread-local set
-      strings.insert(s);
-    } else {
-      s = *existing;
-    }
+    // if (existing == strings.end()) {
+    //   // if the string isn't already known, we must use a single global
+    //   // storage location, guarded by a mutex, so each string is allocated
+    //   // exactly once
+    //   static std::mutex mutex;
+    //   std::unique_lock<std::mutex> lock(mutex);
+    //   // a single global set contains the actual strings, so we allocate each
+    //   // one exactly once.
+    //   static StringSet globalStrings;
+    //   auto globalExisting = globalStrings.find(s);
+    //   if (globalExisting == globalStrings.end()) {
+    //     if (!reuse) {
+    //       static std::vector<std::unique_ptr<std::string>> allocated;
+    //       allocated.emplace_back(wasm::make_unique<std::string>(s));
+    //       s = allocated.back()->c_str(); // we'll never modify it, so this is
+    //       ok
+    //     }
+    //     // insert into global set
+    //     globalStrings.insert(s);
+    //   } else {
+    //     s = *globalExisting;
+    //   }
+    //   // add the string to our thread-local set
+    //   strings.insert(s);
+    // } else {
+    //   s = *existing;
+    // }
 
-    str = s;
+    // str = s;
   }
 
   void set(const IString& s) { str = s.str; }
@@ -197,7 +199,7 @@ public:
       if (end) {
         *end = 0;
       }
-      insert(curr);
+      // insert(curr);
       if (!end) {
         break;
       }

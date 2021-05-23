@@ -275,16 +275,16 @@ void WasmSplitOptions::parse(int argc, const char* argv[]) {
 void parseInput(Module& wasm, const WasmSplitOptions& options) {
   ModuleReader reader;
   reader.setProfile(options.profile);
-  try {
-    reader.read(options.input, wasm);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    std::cerr << '\n';
-    Fatal() << "error parsing wasm";
-  } catch (std::bad_alloc&) {
-    Fatal() << "error building module, std::bad_alloc (possibly invalid "
-               "request for silly amounts of memory)";
-  }
+  // try {
+  reader.read(options.input, wasm);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   std::cerr << '\n';
+  //   Fatal() << "error parsing wasm";
+  // } catch (std::bad_alloc&) {
+  //   Fatal() << "error building module, std::bad_alloc (possibly invalid "
+  //              "request for silly amounts of memory)";
+  // }
   options.applyFeatures(wasm);
 }
 

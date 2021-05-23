@@ -28,7 +28,7 @@
 // everything later.
 //
 
-#include <atomic>
+// #include <atomic>
 
 #include "ir/debug.h"
 #include "ir/element-utils.h"
@@ -46,7 +46,7 @@ namespace wasm {
 
 // Useful into on a function, helping us decide if we can inline it
 struct FunctionInfo {
-  std::atomic<Index> refs;
+  Index refs;
   Index size;
   bool hasCalls;
   bool hasLoops;

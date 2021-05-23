@@ -119,7 +119,7 @@ Literal fromBinaryenLiteral(BinaryenLiteral x) {
 // are used at once this should be optimized to be per-
 // module, but likely it doesn't matter)
 
-static std::mutex BinaryenFunctionMutex;
+// static std::mutex BinaryenFunctionMutex;
 
 // Optimization options
 static PassOptions globalPassOptions =
@@ -3211,12 +3211,12 @@ BinaryenFunctionRef BinaryenAddFunction(BinaryenModuleRef module,
   }
   ret->body = (Expression*)body;
 
-  // Lock. This can be called from multiple threads at once, and is a
-  // point where they all access and modify the module.
-  {
-    std::lock_guard<std::mutex> lock(BinaryenFunctionMutex);
-    ((Module*)module)->addFunction(ret);
-  }
+  // // Lock. This can be called from multiple threads at once, and is a
+  // // point where they all access and modify the module.
+  // {
+  //   std::lock_guard<std::mutex> lock(BinaryenFunctionMutex);
+  //   ((Module*)module)->addFunction(ret);
+  // }
 
   return ret;
 }
@@ -3660,14 +3660,14 @@ void BinaryenModuleSetFeatures(BinaryenModuleRef module,
 
 BinaryenModuleRef BinaryenModuleParse(const char* text) {
   auto* wasm = new Module;
-  try {
-    SExpressionParser parser(const_cast<char*>(text));
-    Element& root = *parser.root;
-    SExpressionWasmBuilder builder(*wasm, *root[0], IRProfile::Normal);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    Fatal() << "error in parsing wasm text";
-  }
+  // try {
+  SExpressionParser parser(const_cast<char*>(text));
+  Element& root = *parser.root;
+  SExpressionWasmBuilder builder(*wasm, *root[0], IRProfile::Normal);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   Fatal() << "error in parsing wasm text";
+  // }
   return wasm;
 }
 
@@ -3899,13 +3899,13 @@ BinaryenModuleRef BinaryenModuleRead(char* input, size_t inputSize) {
   std::vector<char> buffer(false);
   buffer.resize(inputSize);
   std::copy_n(input, inputSize, buffer.begin());
-  try {
-    WasmBinaryBuilder parser(*wasm, buffer);
-    parser.read();
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    Fatal() << "error in parsing wasm binary";
-  }
+  // try {
+  WasmBinaryBuilder parser(*wasm, buffer);
+  parser.read();
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   Fatal() << "error in parsing wasm binary";
+  // }
   return wasm;
 }
 
@@ -4374,13 +4374,13 @@ ExpressionRunnerRunAndDispose(ExpressionRunnerRef runner,
                               BinaryenExpressionRef expr) {
   auto* R = (CExpressionRunner*)runner;
   Expression* ret = nullptr;
-  try {
-    auto flow = R->visit(expr);
-    if (!flow.breaking() && !flow.values.empty()) {
-      ret = flow.getConstExpression(*R->getModule());
-    }
-  } catch (CExpressionRunner::NonconstantException&) {
+  // try {
+  auto flow = R->visit(expr);
+  if (!flow.breaking() && !flow.values.empty()) {
+    ret = flow.getConstExpression(*R->getModule());
   }
+  // } catch (CExpressionRunner::NonconstantException&) {
+  // }
   delete R;
   return ret;
 }
@@ -4396,7 +4396,7 @@ bool BinaryenAreColorsEnabled() { return Colors::isEnabled(); }
 #ifdef __EMSCRIPTEN__
 // Override atexit - we don't need any global ctors to actually run, and
 // otherwise we get clutter in the output in debug builds
-int atexit(void (*function)(void)) { return 0; }
+// int atexit(void (*function)(void)) { return 0; }
 
 // Internal binaryen.js APIs
 

@@ -3129,7 +3129,8 @@ switch (op[0]) {
   default: goto parse_error;
 }
 parse_error:
-  throw ParseException(std::string(op), s.line, s.col);
+  // throw ParseException(std::string(op), s.line, s.col);
+  return makeUnreachable();
 #endif // INSTRUCTION_PARSER
 
 // clang-format on

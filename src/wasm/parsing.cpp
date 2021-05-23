@@ -83,17 +83,17 @@ Name UniqueNameMapper::sourceToUnique(Name sName) {
     return DELEGATE_CALLER_TARGET;
   }
   if (labelMappings.find(sName) == labelMappings.end()) {
-    throw ParseException("bad label in sourceToUnique");
+    //     throw ParseException("bad label in sourceToUnique");
   }
   if (labelMappings[sName].empty()) {
-    throw ParseException("use of popped label in sourceToUnique");
+    //     throw ParseException("use of popped label in sourceToUnique");
   }
   return labelMappings[sName].back();
 }
 
 Name UniqueNameMapper::uniqueToSource(Name name) {
   if (reverseLabelMapping.find(name) == reverseLabelMapping.end()) {
-    throw ParseException("label mismatch in uniqueToSource");
+    //     throw ParseException("label mismatch in uniqueToSource");
   }
   return reverseLabelMapping[name];
 }

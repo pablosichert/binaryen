@@ -953,9 +953,10 @@ static void writeBase64VLQ(std::ostream& out, int32_t n) {
     }
     // more VLG digit will follow -- add continuation bit (0x20),
     // base64 codes 'g'..'z', '0'..'9', '+', '/'
-    out << char(digit < 20
-                  ? 'g' + digit
-                  : digit < 30 ? '0' + digit - 20 : digit == 30 ? '+' : '/');
+    out << char(digit < 20    ? 'g' + digit
+                : digit < 30  ? '0' + digit - 20
+                : digit == 30 ? '+'
+                              : '/');
   }
 }
 
@@ -1710,7 +1711,7 @@ HeapType WasmBinaryBuilder::getIndexedHeapType() {
 Type WasmBinaryBuilder::getConcreteType() {
   auto type = getType();
   if (!type.isConcrete()) {
-    throw ParseException("non-concrete type when one expected");
+    //     throw ParseException("non-concrete type when one expected");
   }
   return type;
 }
@@ -1860,7 +1861,8 @@ void WasmBinaryBuilder::readTypes() {
       case 1:
         return Mutable;
       default:
-        throw ParseException("Expected 0 or 1 for mutability");
+        //         throw ParseException("Expected 0 or 1 for mutability");
+        return Immutable;
     }
   };
 
@@ -2234,7 +2236,7 @@ static int32_t readBase64VLQ(std::istream& in) {
   while (1) {
     auto ch = in.get();
     if (ch == EOF) {
-      throw MapParseException("unexpected EOF in the middle of VLQ");
+      //       throw MapParseException("unexpected EOF in the middle of VLQ");
     }
     if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch < 'g')) {
       // last number digit
@@ -2244,7 +2246,7 @@ static int32_t readBase64VLQ(std::istream& in) {
     }
     if (!(ch >= 'g' && ch <= 'z') && !(ch >= '0' && ch <= '9') && ch != '+' &&
         ch != '/') {
-      throw MapParseException("invalid VLQ digit");
+      //       throw MapParseException("invalid VLQ digit");
     }
     uint32_t digit =
       ch > '9' ? ch - 'g' : (ch >= '0' ? ch - '0' + 20 : (ch == '+' ? 30 : 31));
@@ -2276,8 +2278,8 @@ void WasmBinaryBuilder::readSourceMapHeader() {
   auto mustReadChar = [&](char expected) {
     char c = sourceMap->get();
     if (c != expected) {
-      throw MapParseException(std::string("Unexpected char: expected '") +
-                              expected + "' got '" + c + "'");
+      // throw MapParseException(std::string("Unexpected char: expected '") +
+      //                         expected + "' got '" + c + "'");
     }
   };
 
@@ -2321,7 +2323,8 @@ void WasmBinaryBuilder::readSourceMapHeader() {
       while (1) {
         int ch = sourceMap->get();
         if (ch == EOF) {
-          throw MapParseException("unexpected EOF in the middle of string");
+          //           throw MapParseException("unexpected EOF in the middle of
+          //           string");
         }
         if (ch == '\"') {
           break;
@@ -2334,7 +2337,7 @@ void WasmBinaryBuilder::readSourceMapHeader() {
   };
 
   if (!findField("sources")) {
-    throw MapParseException("cannot find the 'sources' field in map");
+    //     throw MapParseException("cannot find the 'sources' field in map");
   }
 
   skipWhitespace();
@@ -2351,7 +2354,7 @@ void WasmBinaryBuilder::readSourceMapHeader() {
   }
 
   if (!findField("mappings")) {
-    throw MapParseException("cannot find the 'mappings' field in map");
+    //     throw MapParseException("cannot find the 'mappings' field in map");
   }
 
   mustReadChar('\"');
@@ -2387,7 +2390,7 @@ void WasmBinaryBuilder::readNextDebugLocation() {
       break;
     }
     if (ch != ',') {
-      throw MapParseException("Unexpected delimiter");
+      //       throw MapParseException("Unexpected delimiter");
     }
 
     int32_t positionDelta = readBase64VLQ(*sourceMap);
@@ -6513,7 +6516,7 @@ void WasmBinaryBuilder::visitRefAs(RefAs* curr, uint8_t code) {
 }
 
 void WasmBinaryBuilder::throwError(std::string text) {
-  throw ParseException(text, 0, pos);
+  //   throw ParseException(text, 0, pos);
 }
 
 void WasmBinaryBuilder::validateHeapTypeUsingChild(Expression* child,

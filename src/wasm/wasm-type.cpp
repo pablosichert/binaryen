@@ -18,7 +18,7 @@
 #include <array>
 #include <cassert>
 #include <map>
-#include <shared_mutex>
+// #include <shared_mutex>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -640,7 +640,7 @@ bool HeapTypeInfo::operator==(const HeapTypeInfo& other) const {
 }
 
 template<typename Info> struct Store {
-  std::recursive_mutex mutex;
+  // std::recursive_mutex mutex;
 
   // Track unique_ptrs for constructed types to avoid leaks.
   std::vector<std::unique_ptr<Info>> constructedTypes;
@@ -694,7 +694,7 @@ typename Info::type_t Store<Info>::canonicalize(const Info& info) {
   if (info.getCanonical(canonical)) {
     return canonical;
   }
-  std::lock_guard<std::recursive_mutex> lock(mutex);
+  // std::lock_guard<std::recursive_mutex> lock(mutex);
   auto indexIt = typeIDs.find(std::cref(info));
   if (indexIt != typeIDs.end()) {
     return typename Info::type_t(indexIt->second);
@@ -708,7 +708,7 @@ typename Info::type_t Store<Info>::canonicalize(std::unique_ptr<Info>&& info) {
   if (info->getCanonical(canonical)) {
     return canonical;
   }
-  std::lock_guard<std::recursive_mutex> lock(mutex);
+  // std::lock_guard<std::recursive_mutex> lock(mutex);
   auto indexIt = typeIDs.find(std::cref(*info));
   if (indexIt != typeIDs.end()) {
     return typename Info::type_t(indexIt->second);
@@ -899,7 +899,8 @@ FeatureSet Type::getFeatures() const {
           case HeapType::BasicHeapType::i31:
           case HeapType::BasicHeapType::data:
             return FeatureSet::ReferenceTypes | FeatureSet::GC;
-          default: {}
+          default: {
+          }
         }
       }
       // Note: Technically typed function references also require the typed
@@ -2715,7 +2716,7 @@ globallyCanonicalize(std::vector<std::unique_ptr<HeapTypeInfo>>& infos) {
   // same shape as one being canonicalized here. This cannot happen with Types
   // because they are hashed in the global store by pointer identity, which has
   // not yet escaped the builder, rather than shape.
-  std::lock_guard<std::recursive_mutex> lock(globalHeapTypeStore.mutex);
+  // std::lock_guard<std::recursive_mutex> lock(globalHeapTypeStore.mutex);
   std::unordered_map<HeapType, HeapType> canonicalHeapTypes;
   for (auto& info : infos) {
     if (!info) {

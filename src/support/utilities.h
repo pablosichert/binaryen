@@ -22,7 +22,7 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <iostream>
+// #include <iostream>
 #include <memory>
 #include <type_traits>
 
@@ -60,13 +60,14 @@ std::unique_ptr<T> make_unique(Args&&... args) {
 // For fatal errors which could arise from input (i.e. not assertion failures)
 class Fatal {
 public:
-  Fatal() { std::cerr << "Fatal: "; }
+  Fatal() { /* std::cerr << "Fatal: "; */
+  }
   template<typename T> Fatal& operator<<(T arg) {
-    std::cerr << arg;
+    // std::cerr << arg;
     return *this;
   }
   WASM_NORETURN ~Fatal() {
-    std::cerr << "\n";
+    // std::cerr << "\n";
     // Use _Exit here to avoid calling static destructors. This avoids deadlocks
     // in (for example) the thread worker pool, where workers hold a lock while
     // performing their work.

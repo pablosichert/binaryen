@@ -2038,12 +2038,14 @@ public:
     return Flow(NONCONSTANT_FLOW);
   }
 
-  void trap(const char* why) override { throw NonconstantException(); }
+  void trap(const char* why) override { /* throw NonconstantException(); */
+  }
 
-  void hostLimit(const char* why) override { throw NonconstantException(); }
+  void hostLimit(const char* why) override { /* throw NonconstantException(); */
+  }
 
   virtual void throwException(const WasmException& exn) override {
-    throw NonconstantException();
+    // throw NonconstantException();
   }
 };
 
@@ -3117,38 +3119,39 @@ private:
     }
     Flow visitTry(Try* curr) {
       NOTE_ENTER("Try");
-      try {
-        return this->visit(curr->body);
-      } catch (const WasmException& e) {
-        auto processCatchBody = [&](Expression* catchBody) {
-          // Push the current exception onto the exceptionStack in case
-          // 'rethrow's use it
-          exceptionStack.push_back(std::make_pair(e, curr->name));
-          // We need to pop exceptionStack in either case: when the catch body
-          // exits normally or when a new exception is thrown
-          Flow ret;
-          try {
-            ret = this->visit(catchBody);
-          } catch (const WasmException&) {
-            exceptionStack.pop_back();
-            throw;
-          }
-          exceptionStack.pop_back();
-          return ret;
-        };
+      // try {
+      return this->visit(curr->body);
+      // } catch (const WasmException& e) {
+      //   auto processCatchBody = [&](Expression* catchBody) {
+      //     // Push the current exception onto the exceptionStack in case
+      //     // 'rethrow's use it
+      //     exceptionStack.push_back(std::make_pair(e, curr->name));
+      //     // We need to pop exceptionStack in either case: when the catch
+      //     body
+      //     // exits normally or when a new exception is thrown
+      //     Flow ret;
+      //     try {
+      //       ret = this->visit(catchBody);
+      //     } catch (const WasmException&) {
+      //       exceptionStack.pop_back();
+      //       throw;
+      //     }
+      //     exceptionStack.pop_back();
+      //     return ret;
+      //   };
 
-        for (size_t i = 0; i < curr->catchEvents.size(); i++) {
-          if (curr->catchEvents[i] == e.event) {
-            instance.multiValues.push_back(e.values);
-            return processCatchBody(curr->catchBodies[i]);
-          }
-        }
-        if (curr->hasCatchAll()) {
-          return processCatchBody(curr->catchBodies.back());
-        }
-        // This exception is not caught by this try-catch. Rethrow it.
-        throw;
-      }
+      //   for (size_t i = 0; i < curr->catchEvents.size(); i++) {
+      //     if (curr->catchEvents[i] == e.event) {
+      //       instance.multiValues.push_back(e.values);
+      //       return processCatchBody(curr->catchBodies[i]);
+      //     }
+      //   }
+      //   if (curr->hasCatchAll()) {
+      //     return processCatchBody(curr->catchBodies.back());
+      //   }
+      //   // This exception is not caught by this try-catch. Rethrow it.
+      //   throw;
+      // }
     }
     Flow visitRethrow(Rethrow* curr) {
       for (int i = exceptionStack.size() - 1; i >= 0; i--) {

@@ -13,14 +13,14 @@ using namespace wasm;
 std::unique_ptr<Module> parse(char* module) {
   auto wasm = std::make_unique<Module>();
   wasm->features = FeatureSet::All;
-  try {
-    SExpressionParser parser(module);
-    Element& root = *parser.root;
-    SExpressionWasmBuilder builder(*wasm, *root[0], IRProfile::Normal);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    Fatal() << "error in parsing wasm text";
-  }
+  // try {
+  SExpressionParser parser(module);
+  Element& root = *parser.root;
+  SExpressionWasmBuilder builder(*wasm, *root[0], IRProfile::Normal);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   Fatal() << "error in parsing wasm text";
+  // }
   return wasm;
 }
 

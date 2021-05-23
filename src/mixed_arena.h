@@ -17,11 +17,11 @@
 #ifndef wasm_mixed_arena_h
 #define wasm_mixed_arena_h
 
-#include <atomic>
+// #include <atomic>
 #include <cassert>
 #include <memory>
-#include <mutex>
-#include <thread>
+// #include <mutex>
+// #include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -70,73 +70,74 @@ struct MixedArena {
 
   size_t index = 0; // in last chunk
 
-  std::thread::id threadId;
+  // std::thread::id threadId;
 
   // multithreaded allocation - each arena is valid on a specific thread.
   // if we are on the wrong thread, we atomically look in the linked
   // list of next, adding an allocator if necessary
-  std::atomic<MixedArena*> next;
+  // std::atomic<MixedArena*> next;
 
   MixedArena() {
-    threadId = std::this_thread::get_id();
-    next.store(nullptr);
+    // threadId = std::this_thread::get_id();
+    // next.store(nullptr);
   }
 
   // Allocate an amount of space with a guaranteed alignment
   void* allocSpace(size_t size, size_t align) {
-    // the bump allocator data should not be modified by multiple threads at
-    // once.
-    auto myId = std::this_thread::get_id();
-    if (myId != threadId) {
-      MixedArena* curr = this;
-      MixedArena* allocated = nullptr;
-      while (myId != curr->threadId) {
-        auto seen = curr->next.load();
-        if (seen) {
-          curr = seen;
-          continue;
-        }
-        // there is a nullptr for next, so we may be able to place a new
-        // allocator for us there. but carefully, as others may do so as
-        // well. we may waste a few allocations here, but it doesn't matter
-        // as this can only happen as the chain is built up, i.e.,
-        // O(# of cores) per allocator, and our allocatrs are long-lived.
-        if (!allocated) {
-          allocated = new MixedArena(); // has our thread id
-        }
-        if (curr->next.compare_exchange_strong(seen, allocated)) {
-          // we replaced it, so we are the next in the chain
-          // we can forget about allocated, it is owned by the chain now
-          allocated = nullptr;
-          break;
-        }
-        // otherwise, the cmpxchg updated seen, and we continue to loop
-        curr = seen;
-      }
-      if (allocated) {
-        delete allocated;
-      }
-      return curr->allocSpace(size, align);
-    }
-    // First, move the current index in the last chunk to an aligned position.
-    index = (index + align - 1) & (-align);
-    if (index + size > CHUNK_SIZE || chunks.size() == 0) {
-      // Allocate a new chunk.
-      auto numChunks = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
-      assert(size <= numChunks * CHUNK_SIZE);
-      auto* allocation =
-        wasm::aligned_malloc(MAX_ALIGN, numChunks * CHUNK_SIZE);
-      if (!allocation) {
-        abort();
-      }
-      chunks.push_back(allocation);
-      index = 0;
-    }
-    uint8_t* ret = static_cast<uint8_t*>(chunks.back());
-    ret += index;
-    index += size; // TODO: if we allocated more than 1 chunk, reuse the
-                   // remainder, right now we allocate another next time
-    return static_cast<void*>(ret);
+    // // the bump allocator data should not be modified by multiple threads at
+    // // once.
+    // auto myId = std::this_thread::get_id();
+    // if (myId != threadId) {
+    //   MixedArena* curr = this;
+    //   MixedArena* allocated = nullptr;
+    //   while (myId != curr->threadId) {
+    //     auto seen = curr->next.load();
+    //     if (seen) {
+    //       curr = seen;
+    //       continue;
+    //     }
+    //     // there is a nullptr for next, so we may be able to place a new
+    //     // allocator for us there. but carefully, as others may do so as
+    //     // well. we may waste a few allocations here, but it doesn't matter
+    //     // as this can only happen as the chain is built up, i.e.,
+    //     // O(# of cores) per allocator, and our allocatrs are long-lived.
+    //     if (!allocated) {
+    //       allocated = new MixedArena(); // has our thread id
+    //     }
+    //     if (curr->next.compare_exchange_strong(seen, allocated)) {
+    //       // we replaced it, so we are the next in the chain
+    //       // we can forget about allocated, it is owned by the chain now
+    //       allocated = nullptr;
+    //       break;
+    //     }
+    //     // otherwise, the cmpxchg updated seen, and we continue to loop
+    //     curr = seen;
+    //   }
+    //   if (allocated) {
+    //     delete allocated;
+    //   }
+    //   return curr->allocSpace(size, align);
+    // }
+    // // First, move the current index in the last chunk to an aligned
+    // position. index = (index + align - 1) & (-align); if (index + size >
+    // CHUNK_SIZE || chunks.size() == 0) {
+    //   // Allocate a new chunk.
+    //   auto numChunks = (size + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    //   assert(size <= numChunks * CHUNK_SIZE);
+    //   auto* allocation =
+    //     wasm::aligned_malloc(MAX_ALIGN, numChunks * CHUNK_SIZE);
+    //   if (!allocation) {
+    //     abort();
+    //   }
+    //   chunks.push_back(allocation);
+    //   index = 0;
+    // }
+    // uint8_t* ret = static_cast<uint8_t*>(chunks.back());
+    // ret += index;
+    // index += size; // TODO: if we allocated more than 1 chunk, reuse the
+    //                // remainder, right now we allocate another next time
+    // return static_cast<void*>(ret);
+    return nullptr;
   }
 
   template<class T> T* alloc() {
@@ -157,9 +158,9 @@ struct MixedArena {
 
   ~MixedArena() {
     clear();
-    if (next.load()) {
-      delete next.load();
-    }
+    // if (next.load()) {
+    //   delete next.load();
+    // }
   }
 };
 

@@ -227,17 +227,17 @@ int main(int argc, const char* argv[]) {
     // will still parse the start function even in this mode.
     reader.setSkipFunctionBodies(true);
   }
-  try {
-    reader.read(infile, wasm, inputSourceMapFilename);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    std::cerr << '\n';
-    Fatal() << "error in parsing input";
-  } catch (MapParseException& p) {
-    p.dump(std::cerr);
-    std::cerr << '\n';
-    Fatal() << "error in parsing wasm source map";
-  }
+  // try {
+  reader.read(infile, wasm, inputSourceMapFilename);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   std::cerr << '\n';
+  //   Fatal() << "error in parsing input";
+  // } catch (MapParseException& p) {
+  //   p.dump(std::cerr);
+  //   std::cerr << '\n';
+  //   Fatal() << "error in parsing wasm source map";
+  // }
 
   options.applyFeatures(wasm);
 

@@ -947,40 +947,40 @@ int main(int argc, const char* argv[]) {
     input.size() >= suffix.size() &&
     input.compare(input.size() - suffix.size(), suffix.size(), suffix) == 0;
 
-  try {
-    // If the input filename ends in `.wasm`, then parse it in binary form,
-    // otherwise assume it's a `*.wat` file and go from there.
-    //
-    // Note that we're not using the built-in `ModuleReader` which will also do
-    // similar logic here because when testing JS files we use the
-    // `--allow-asserts` flag which means we need to parse the extra
-    // s-expressions that come at the end of the `*.wast` file after the module
-    // is defined.
-    if (binaryInput) {
-      ModuleReader reader;
-      reader.read(input, wasm, "");
-    } else {
-      auto input(
-        read_file<std::vector<char>>(options.extra["infile"], Flags::Text));
-      if (options.debug) {
-        std::cerr << "s-parsing..." << std::endl;
-      }
-      sexprParser = make_unique<SExpressionParser>(input.data());
-      root = sexprParser->root;
-
-      if (options.debug) {
-        std::cerr << "w-parsing..." << std::endl;
-      }
-      sexprBuilder =
-        make_unique<SExpressionWasmBuilder>(wasm, *(*root)[0], options.profile);
+  // try {
+  // If the input filename ends in `.wasm`, then parse it in binary form,
+  // otherwise assume it's a `*.wat` file and go from there.
+  //
+  // Note that we're not using the built-in `ModuleReader` which will also do
+  // similar logic here because when testing JS files we use the
+  // `--allow-asserts` flag which means we need to parse the extra
+  // s-expressions that come at the end of the `*.wast` file after the module
+  // is defined.
+  if (binaryInput) {
+    ModuleReader reader;
+    reader.read(input, wasm, "");
+  } else {
+    auto input(
+      read_file<std::vector<char>>(options.extra["infile"], Flags::Text));
+    if (options.debug) {
+      std::cerr << "s-parsing..." << std::endl;
     }
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    Fatal() << "error in parsing input";
-  } catch (std::bad_alloc&) {
-    Fatal() << "error in building module, std::bad_alloc (possibly invalid "
-               "request for silly amounts of memory)";
+    sexprParser = make_unique<SExpressionParser>(input.data());
+    root = sexprParser->root;
+
+    if (options.debug) {
+      std::cerr << "w-parsing..." << std::endl;
+    }
+    sexprBuilder =
+      make_unique<SExpressionWasmBuilder>(wasm, *(*root)[0], options.profile);
   }
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   Fatal() << "error in parsing input";
+  // } catch (std::bad_alloc&) {
+  //   Fatal() << "error in building module, std::bad_alloc (possibly invalid "
+  //              "request for silly amounts of memory)";
+  // }
 
   // TODO: Remove this restriction when wasm2js can handle multiple tables
   if (wasm.tables.size() > 1) {

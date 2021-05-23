@@ -78,10 +78,10 @@ public:
         extra = "\nrecommendation: build with -s NO_EXIT_RUNTIME=1 so that "
                 "calls to atexit that use ___dso_handle are not emitted";
       }
-      throw FailToEvalException(
-        std::string(
-          "tried to access a dangerous (import-initialized) global: ") +
-        name.str + extra);
+      // throw FailToEvalException(
+      //   std::string(
+      //     "tried to access a dangerous (import-initialized) global: ") +
+      //   name.str + extra);
     }
     return globals[name];
   }
@@ -257,14 +257,15 @@ struct CtorEvalExternalInterface : EvallingModuleInstance::ExternalInterface {
         auto* inst = it->second.get();
         auto* globalExport = inst->wasm.getExportOrNull(global->base);
         if (!globalExport) {
-          throw FailToEvalException(std::string("importGlobals: ") +
-                                    global->module.str + "." +
-                                    global->base.str);
+          // throw FailToEvalException(std::string("importGlobals: ") +
+          //                           global->module.str + "." +
+          //                           global->base.str);
         }
         globals[global->name] = inst->globals[globalExport->value];
       } else {
-        throw FailToEvalException(std::string("importGlobals: ") +
-                                  global->module.str + "." + global->base.str);
+        // throw FailToEvalException(std::string("importGlobals: ") +
+        //                           global->module.str + "." +
+        //                           global->base.str);
       }
     });
   }
@@ -275,9 +276,9 @@ struct CtorEvalExternalInterface : EvallingModuleInstance::ExternalInterface {
       extra = "\nrecommendation: build with -s NO_EXIT_RUNTIME=1 so that calls "
               "to atexit are not emitted";
     }
-    throw FailToEvalException(std::string("call import: ") +
-                              import->module.str + "." + import->base.str +
-                              extra);
+    // throw FailToEvalException(std::string("call import: ") +
+    //                           import->module.str + "." + import->base.str +
+    //                           extra);
   }
 
   Literals callTable(Name tableName,
@@ -291,7 +292,7 @@ struct CtorEvalExternalInterface : EvallingModuleInstance::ExternalInterface {
 
     auto* table = wasm->getTableOrNull(tableName);
     if (!table) {
-      throw FailToEvalException("callTable on non-existing table");
+      // throw FailToEvalException("callTable on non-existing table");
     }
 
     // we assume the table is not modified (hmm)
@@ -323,24 +324,24 @@ struct CtorEvalExternalInterface : EvallingModuleInstance::ExternalInterface {
           // imported, fail
           auto* func = wasm->getFunction(name);
           if (func->sig != sig) {
-            throw FailToEvalException(
+            // throw FailToEvalException(
               std::string("callTable signature mismatch: ") + name.str);
           }
           if (!func->imported()) {
             return instance.callFunctionInternal(name, arguments);
           } else {
-            throw FailToEvalException(
-              std::string("callTable on imported function: ") + name.str);
+            // throw FailToEvalException(
+            //   std::string("callTable on imported function: ") + name.str);
           }
         } else {
-          throw FailToEvalException(
-            std::string("callTable on uninitialized entry"));
+          // throw FailToEvalException(
+          //   std::string("callTable on uninitialized entry"));
         }
       }
     }
-    throw FailToEvalException(
-      std::string("callTable on index not found in static segments: ") +
-      std::to_string(index));
+    // throw FailToEvalException(
+    //   std::string("callTable on index not found in static segments: ") +
+    //   std::to_string(index));
   }
 
   int8_t load8s(Address addr) override { return doLoad<int8_t>(addr); }
@@ -370,21 +371,21 @@ struct CtorEvalExternalInterface : EvallingModuleInstance::ExternalInterface {
   }
 
   bool growMemory(Address /*oldSize*/, Address newSize) override {
-    throw FailToEvalException("grow memory");
+    //     throw FailToEvalException("grow memory");
   }
 
   void trap(const char* why) override {
-    throw FailToEvalException(std::string("trap: ") + why);
+    //     throw FailToEvalException(std::string("trap: ") + why);
   }
 
   void hostLimit(const char* why) override {
-    throw FailToEvalException(std::string("trap: ") + why);
+    //     throw FailToEvalException(std::string("trap: ") + why);
   }
 
   void throwException(const WasmException& exn) override {
     std::stringstream ss;
     ss << "exception thrown: " << exn;
-    throw FailToEvalException(ss.str());
+    //     throw FailToEvalException(ss.str());
   }
 
 private:
@@ -394,7 +395,7 @@ private:
     // if memory is on the stack, use the stack
     if (address >= STACK_LOWER_LIMIT) {
       if (address >= STACK_UPPER_LIMIT) {
-        throw FailToEvalException("stack usage too high");
+        //         throw FailToEvalException("stack usage too high");
       }
       Address relative = address - STACK_LOWER_LIMIT;
       // in range, all is good, use the stack
@@ -444,61 +445,60 @@ void evalCtors(Module& wasm, std::vector<std::string> ctors) {
   linkedInstances["env"] = envInstance;
 
   CtorEvalExternalInterface interface(linkedInstances);
-  try {
-    // flatten memory, so we do not depend on the layout of data segments
-    if (!MemoryUtils::flatten(wasm.memory)) {
-      Fatal() << "  ...stopping since could not flatten memory\n";
-    }
-
-    // create an instance for evalling
-    EvallingModuleInstance instance(wasm, &interface, linkedInstances);
-    // set up the stack area and other environment details
-    instance.setupEnvironment();
-    // we should not add new globals from here on; as a result, using
-    // an imported global will fail, as it is missing and so looks new
-    instance.globals.seal();
-    // go one by one, in order, until we fail
-    // TODO: if we knew priorities, we could reorder?
-    for (auto& ctor : ctors) {
-      std::cerr << "trying to eval " << ctor << '\n';
-      // snapshot memory, as either the entire function is done, or none
-      auto memoryBefore = wasm.memory;
-      // snapshot globals (note that STACKTOP might be modified, but should
-      // be returned, so that works out)
-      auto globalsBefore = instance.globals;
-      Export* ex = wasm.getExportOrNull(ctor);
-      if (!ex) {
-        Fatal() << "export not found: " << ctor;
-      }
-      try {
-        instance.callFunction(ex->value, LiteralList());
-      } catch (FailToEvalException& fail) {
-        // that's it, we failed, so stop here, cleaning up partial
-        // memory changes first
-        std::cerr << "  ...stopping since could not eval: " << fail.why << "\n";
-        wasm.memory = memoryBefore;
-        return;
-      }
-      if (instance.globals != globalsBefore) {
-        std::cerr << "  ...stopping since globals modified\n";
-        wasm.memory = memoryBefore;
-        return;
-      }
-      std::cerr << "  ...success on " << ctor << ".\n";
-      // success, the entire function was evalled!
-      // we can nop the function (which may be used elsewhere)
-      // and remove the export
-      auto* exp = wasm.getExport(ctor);
-      auto* func = wasm.getFunction(exp->value);
-      func->body = wasm.allocator.alloc<Nop>();
-      wasm.removeExport(exp->name);
-    }
-  } catch (FailToEvalException& fail) {
-    // that's it, we failed to even create the instance
-    std::cerr << "  ...stopping since could not create module instance: "
-              << fail.why << "\n";
-    return;
+  // try {
+  // flatten memory, so we do not depend on the layout of data segments
+  if (!MemoryUtils::flatten(wasm.memory)) {
+    Fatal() << "  ...stopping since could not flatten memory\n";
   }
+
+  // create an instance for evalling
+  EvallingModuleInstance instance(wasm, &interface, linkedInstances);
+  // set up the stack area and other environment details
+  instance.setupEnvironment();
+  // we should not add new globals from here on; as a result, using
+  // an imported global will fail, as it is missing and so looks new
+  instance.globals.seal();
+  // go one by one, in order, until we fail
+  // TODO: if we knew priorities, we could reorder?
+  for (auto& ctor : ctors) {
+    std::cerr << "trying to eval " << ctor << '\n';
+    // snapshot memory, as either the entire function is done, or none
+    auto memoryBefore = wasm.memory;
+    // snapshot globals (note that STACKTOP might be modified, but should
+    // be returned, so that works out)
+    auto globalsBefore = instance.globals;
+    Export* ex = wasm.getExportOrNull(ctor);
+    if (!ex) {
+      Fatal() << "export not found: " << ctor;
+    }
+    // try {
+    instance.callFunction(ex->value, LiteralList());
+    // } catch (FailToEvalException& fail) {
+    //   // that's it, we failed, so stop here, cleaning up partial
+    //   // memory changes first
+    //   std::cerr << "  ...stopping since could not eval: " << fail.why <<
+    //   "\n"; wasm.memory = memoryBefore; return;
+    // }
+    if (instance.globals != globalsBefore) {
+      std::cerr << "  ...stopping since globals modified\n";
+      wasm.memory = memoryBefore;
+      return;
+    }
+    std::cerr << "  ...success on " << ctor << ".\n";
+    // success, the entire function was evalled!
+    // we can nop the function (which may be used elsewhere)
+    // and remove the export
+    auto* exp = wasm.getExport(ctor);
+    auto* func = wasm.getFunction(exp->value);
+    func->body = wasm.allocator.alloc<Nop>();
+    wasm.removeExport(exp->name);
+  }
+  // } catch (FailToEvalException& fail) {
+  //   // that's it, we failed to even create the instance
+  //   std::cerr << "  ...stopping since could not create module instance: "
+  //             << fail.why << "\n";
+  //   return;
+  // }
 }
 
 //
@@ -555,12 +555,12 @@ int main(int argc, const char* argv[]) {
       std::cerr << "reading...\n";
     }
     ModuleReader reader;
-    try {
-      reader.read(options.extra["infile"], wasm);
-    } catch (ParseException& p) {
-      p.dump(std::cerr);
-      Fatal() << "error in parsing input";
-    }
+    // try {
+    reader.read(options.extra["infile"], wasm);
+    // } catch (ParseException& p) {
+    //   p.dump(std::cerr);
+    //   Fatal() << "error in parsing input";
+    // }
   }
 
   options.applyFeatures(wasm);

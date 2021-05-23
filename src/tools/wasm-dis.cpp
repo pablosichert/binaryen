@@ -60,17 +60,17 @@ int main(int argc, const char* argv[]) {
     std::cerr << "parsing binary..." << std::endl;
   }
   Module wasm;
-  try {
-    ModuleReader().readBinary(options.extra["infile"], wasm, sourceMapFilename);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    std::cerr << '\n';
-    Fatal() << "error in parsing wasm binary";
-  } catch (MapParseException& p) {
-    p.dump(std::cerr);
-    std::cerr << '\n';
-    Fatal() << "error in parsing wasm source mapping";
-  }
+  // try {
+  ModuleReader().readBinary(options.extra["infile"], wasm, sourceMapFilename);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   std::cerr << '\n';
+  //   Fatal() << "error in parsing wasm binary";
+  // } catch (MapParseException& p) {
+  //   p.dump(std::cerr);
+  //   std::cerr << '\n';
+  //   Fatal() << "error in parsing wasm source mapping";
+  // }
 
   options.applyFeatures(wasm);
 

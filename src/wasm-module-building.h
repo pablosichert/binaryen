@@ -90,12 +90,11 @@ class OptimizingIncrementalModuleBuilder {
   PassOptions passOptions;
   std::function<void(PassRunner&)> addPrePasses;
   Function* endMarker;
-  std::atomic<Function*>* list;
+  Function** list;
   uint32_t nextFunction; // only used on main thread
   uint32_t numWorkers;
   std::vector<std::unique_ptr<std::thread>> threads;
-  std::atomic<uint32_t> liveWorkers, activeWorkers, availableFuncs,
-    finishedFuncs;
+  uint32_t liveWorkers, activeWorkers, availableFuncs, finishedFuncs;
   std::mutex mutex;
   std::condition_variable condition;
   bool finishing;
@@ -125,17 +124,17 @@ public:
 
     // prepare work list
     endMarker = new Function();
-    list = new std::atomic<Function*>[numFunctions];
+    list = new Function*[numFunctions];
     for (uint32_t i = 0; i < numFunctions; i++) {
-      list[i].store(endMarker);
+      list[i] = endMarker;
     }
     // create workers
     DEBUG_THREAD("creating workers");
     numWorkers = ThreadPool::getNumCores();
     assert(numWorkers >= 1);
     // worth it to use threads
-    liveWorkers.store(0);
-    activeWorkers.store(0);
+    liveWorkers = 0;
+    activeWorkers = 0;
     // TODO: one less, and add it at the very end, to not compete with main
     // thread?
     for (uint32_t i = 0; i < numWorkers; i++) {
@@ -144,8 +143,8 @@ public:
     waitUntilAllReady();
     DEBUG_THREAD("workers are ready");
     // prepare the rest of the initial state
-    availableFuncs.store(0);
-    finishedFuncs.store(0);
+    availableFuncs = 0;
+    finishedFuncs = 0;
   }
 
   ~OptimizingIncrementalModuleBuilder() {
@@ -166,7 +165,7 @@ public:
     }
     queueFunction(func);
     // notify workers if needed
-    auto notify = availableFuncs.load();
+    auto notify = availableFuncs;
     for (uint32_t i = 0; i < notify; i++) {
       notifyWorker();
     }
@@ -217,9 +216,8 @@ private:
   void waitUntilAllReady() {
     DEBUG_THREAD("wait until all workers are ready");
     std::unique_lock<std::mutex> lock(mutex);
-    if (liveWorkers.load() < numWorkers) {
-      condition.wait(lock,
-                     [this]() { return liveWorkers.load() == numWorkers; });
+    if (liveWorkers < numWorkers) {
+      condition.wait(lock, [this]() { return liveWorkers == numWorkers; });
     }
   }
 
@@ -228,8 +226,8 @@ private:
     {
       std::unique_lock<std::mutex> lock(mutex);
       finishing = true;
-      if (liveWorkers.load() > 0) {
-        condition.wait(lock, [this]() { return liveWorkers.load() == 0; });
+      if (liveWorkers > 0) {
+        condition.wait(lock, [this]() { return liveWorkers == 0; });
       }
     }
     DEBUG_THREAD("joining");
@@ -243,7 +241,7 @@ private:
     DEBUG_THREAD("queue function");
     // TODO: if we are given more than we expected, use a slower work queue?
     assert(nextFunction < numFunctions);
-    list[nextFunction++].store(func);
+    list[nextFunction++] = func;
     availableFuncs++;
   }
 
@@ -272,7 +270,7 @@ private:
     }
     for (uint32_t i = 0; i < self->numFunctions; i++) {
       DEBUG_THREAD("workerMain iteration " << i);
-      if (self->list[i].load() == self->endMarker) {
+      if (self->list[i] == self->endMarker) {
         // sleep, this entry isn't ready yet
         DEBUG_THREAD("workerMain sleep");
         self->activeWorkers--;

@@ -97,10 +97,11 @@ inline TrapMode trapModeFromString(std::string const& str) {
   } else if (str == "js") {
     return TrapMode::JS;
   } else {
-    throw std::invalid_argument(
-      "Unsupported trap mode \"" + str +
-      "\". "
-      "Valid modes are \"allow\", \"js\", and \"clamp\"");
+    // throw std::invalid_argument(
+    //   "Unsupported trap mode \"" + str +
+    //   "\". "
+    //   "Valid modes are \"allow\", \"js\", and \"clamp\"");
+    return TrapMode::Allow;
   }
 }
 

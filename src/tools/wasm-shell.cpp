@@ -196,14 +196,14 @@ protected:
       return parseModuleAssertion(s);
     }
 
-    try {
-      parseOperation(inner);
-    } catch (const TrapException&) {
-      trapped = true;
-    } catch (const WasmException& e) {
-      std::cout << "[exception thrown: " << e << "]" << std::endl;
-      trapped = true;
-    }
+    // try {
+    parseOperation(inner);
+    // } catch (const TrapException&) {
+    //   trapped = true;
+    // } catch (const WasmException& e) {
+    //   std::cout << "[exception thrown: " << e << "]" << std::endl;
+    //   trapped = true;
+    // }
 
     assert(trapped);
   }
@@ -216,14 +216,14 @@ protected:
         builders[lastModule]->parseExpression(*s[2]));
     }
     bool trapped = false;
-    try {
-      actual = parseOperation(*s[1]);
-    } catch (const TrapException&) {
-      trapped = true;
-    } catch (const WasmException& e) {
-      std::cout << "[exception thrown: " << e << "]" << std::endl;
-      trapped = true;
-    }
+    // try {
+    actual = parseOperation(*s[1]);
+    // } catch (const TrapException&) {
+    //   trapped = true;
+    // } catch (const WasmException& e) {
+    //   std::cout << "[exception thrown: " << e << "]" << std::endl;
+    //   trapped = true;
+    // }
     assert(!trapped);
     std::cerr << "seen " << actual << ", expected " << expected << '\n';
     if (expected != actual) {
@@ -238,11 +238,11 @@ protected:
     auto id = s[0]->str();
 
     bool invalid = false;
-    try {
-      SExpressionWasmBuilder(wasm, *s[1], IRProfile::Normal);
-    } catch (const ParseException&) {
-      invalid = true;
-    }
+    // try {
+    SExpressionWasmBuilder(wasm, *s[1], IRProfile::Normal);
+    // } catch (const ParseException&) {
+    //   invalid = true;
+    // }
 
     if (!invalid) {
       // maybe parsed ok, but otherwise incorrect
@@ -285,14 +285,14 @@ protected:
     }
 
     if (!invalid && id == ASSERT_TRAP) {
-      try {
-        instantiate(&wasm);
-      } catch (const TrapException&) {
-        invalid = true;
-      } catch (const WasmException& e) {
-        std::cout << "[exception thrown: " << e << "]" << std::endl;
-        invalid = true;
-      }
+      // try {
+      instantiate(&wasm);
+      // } catch (const TrapException&) {
+      //   invalid = true;
+      // } catch (const WasmException& e) {
+      //   std::cout << "[exception thrown: " << e << "]" << std::endl;
+      //   invalid = true;
+      // }
     }
 
     if (!invalid) {
@@ -408,17 +408,17 @@ int main(int argc, const char* argv[]) {
     read_file<std::vector<char>>(options.extra["infile"], Flags::Text));
 
   bool checked = false;
-  try {
-    if (options.debug) {
-      std::cerr << "parsing text to s-expressions...\n";
-    }
-    SExpressionParser parser(input.data());
-    Element& root = *parser.root;
-    checked = Shell(options).parseAndRun(root);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    exit(1);
+  // try {
+  if (options.debug) {
+    std::cerr << "parsing text to s-expressions...\n";
   }
+  SExpressionParser parser(input.data());
+  Element& root = *parser.root;
+  checked = Shell(options).parseAndRun(root);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   exit(1);
+  // }
 
   if (checked) {
     Colors::green(std::cerr);

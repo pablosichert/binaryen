@@ -100,20 +100,20 @@ int main(int argc, const char* argv[]) {
 
   Module wasm;
 
-  try {
-    if (options.debug) {
-      std::cerr << "s-parsing..." << std::endl;
-    }
-    SExpressionParser parser(const_cast<char*>(input.c_str()));
-    Element& root = *parser.root;
-    if (options.debug) {
-      std::cerr << "w-parsing..." << std::endl;
-    }
-    SExpressionWasmBuilder builder(wasm, *root[0], options.profile);
-  } catch (ParseException& p) {
-    p.dump(std::cerr);
-    Fatal() << "error in parsing input";
+  // try {
+  if (options.debug) {
+    std::cerr << "s-parsing..." << std::endl;
   }
+  SExpressionParser parser(const_cast<char*>(input.c_str()));
+  Element& root = *parser.root;
+  if (options.debug) {
+    std::cerr << "w-parsing..." << std::endl;
+  }
+  SExpressionWasmBuilder builder(wasm, *root[0], options.profile);
+  // } catch (ParseException& p) {
+  //   p.dump(std::cerr);
+  //   Fatal() << "error in parsing input";
+  // }
 
   options.applyFeatures(wasm);
 

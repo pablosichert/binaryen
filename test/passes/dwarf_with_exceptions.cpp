@@ -1,10 +1,10 @@
 void foo();
 void dwarf_with_exceptions() {
-  try {
-    foo();
-  } catch (...) {
-    foo();
-  }
+  // try {
+  foo();
+  // } catch (...) {
+  //   foo();
+  // }
 }
 // How to generate dwarf_with_exceptions.wasm:
 // $ clang++ -std=c++14 --target=wasm32-unknown-unknown -g -fwasm-exceptions \

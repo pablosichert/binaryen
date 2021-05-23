@@ -34,7 +34,7 @@
 // further optimization opportunities.
 //
 
-#include <atomic>
+// #include <atomic>
 
 #include "ir/effects.h"
 #include "ir/properties.h"
@@ -50,8 +50,8 @@ namespace {
 struct GlobalInfo {
   bool imported = false;
   bool exported = false;
-  std::atomic<bool> written;
-  std::atomic<bool> read;
+  bool written;
+  bool read;
 };
 
 using GlobalInfoMap = std::map<Name, GlobalInfo>;

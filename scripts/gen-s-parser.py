@@ -678,7 +678,8 @@ def instruction_parser():
     emit(trie)
     printer.print_line("parse_error:")
     with printer.indent():
-        printer.print_line("throw ParseException(std::string(op), s.line, s.col);")
+        printer.print_line("// throw ParseException(std::string(op), s.line, s.col);")
+        printer.print_line("return makeUnreachable();")
 
 
 def print_header():

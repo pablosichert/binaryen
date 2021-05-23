@@ -1100,12 +1100,13 @@ public:
 // input which preclude even creating valid IR, which the validator depends
 // on.
 class ValidatingBuilder : public Builder {
-  size_t line = -1, col = -1;
+  // size_t line = -1, col = -1;
 
 public:
-  ValidatingBuilder(Module& wasm, size_t line) : Builder(wasm), line(line) {}
+  ValidatingBuilder(Module& wasm, size_t line)
+    : Builder(wasm) /*, line(line) */ {}
   ValidatingBuilder(Module& wasm, size_t line, size_t col)
-    : Builder(wasm), line(line), col(col) {}
+    : Builder(wasm) /*, line(line), col(col)*/ {}
 
   Expression* validateAndMakeBrOn(BrOnOp op,
                                   Name name,
@@ -1122,7 +1123,7 @@ public:
     }
     if (op == BrOnNull) {
       if (!ref->type.isRef() && ref->type != Type::unreachable) {
-        throw ParseException("Invalid ref for br_on_null", line, col);
+        // throw ParseException("Invalid ref for br_on_null", line, col);
       }
     }
     return makeBrOn(op, name, ref, rtt);
@@ -1142,11 +1143,12 @@ public:
         block->finalize(Type::unreachable);
         return block;
       }
-      throw ParseException("Non-reference type for a call_ref", line, col);
+      // throw ParseException("Non-reference type for a call_ref", line, col);
     }
     auto heapType = target->type.getHeapType();
     if (!heapType.isSignature()) {
-      throw ParseException("Invalid reference type for a call_ref", line, col);
+      // throw ParseException("Invalid reference type for a call_ref", line,
+      // col);
     }
     return makeCallRef(target, args, heapType.getSignature().results, isReturn);
   }

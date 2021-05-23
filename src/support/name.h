@@ -41,9 +41,9 @@ struct Name : public cashew::IString {
 
   friend std::ostream& operator<<(std::ostream& o, Name name) {
     if (name.str) {
-      return o << name.str;
+      return o /* << name.str */;
     } else {
-      return o << "(null Name)";
+      return o /* << "(null Name)" */;
     }
   }
 

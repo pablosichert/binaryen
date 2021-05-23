@@ -116,7 +116,7 @@ template<typename T, typename MiniT> struct LEB {
       T significant_payload = payload & shift_mask;
       if (significant_payload != payload) {
         if (!(std::is_signed<T>::value && last)) {
-          throw ParseException("LEB dropped bits only valid for signed LEB");
+          // throw ParseException("LEB dropped bits only valid for signed LEB");
         }
       }
       value |= significant_payload << shift;
@@ -125,7 +125,7 @@ template<typename T, typename MiniT> struct LEB {
       }
       shift += 7;
       if (size_t(shift) >= sizeof(T) * 8) {
-        throw ParseException("LEB overflow");
+        // throw ParseException("LEB overflow");
       }
     }
     // If signed LEB, then we might need to sign-extend. (compile should
@@ -137,8 +137,8 @@ template<typename T, typename MiniT> struct LEB {
         value <<= sext_bits;
         value >>= sext_bits;
         if (value >= 0) {
-          throw ParseException(
-            " LEBsign-extend should produce a negative value");
+          // throw ParseException(
+          //   " LEBsign-extend should produce a negative value");
         }
       }
     }

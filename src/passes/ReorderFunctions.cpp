@@ -35,7 +35,7 @@
 
 namespace wasm {
 
-typedef std::unordered_map<Name, std::atomic<Index>> NameCountMap;
+typedef std::unordered_map<Name, Index> NameCountMap;
 
 struct CallCountScanner : public WalkerPass<PostWalker<CallCountScanner>> {
   bool isFunctionParallel() override { return true; }

@@ -620,32 +620,32 @@ void PassRunner::run() {
     auto flush = [&]() {
       if (stack.size() > 0) {
         // run the stack of passes on all the functions, in parallel
-        size_t num = ThreadPool::get()->size();
-        std::vector<std::function<ThreadWorkState()>> doWorkers;
-        std::atomic<size_t> nextFunction;
-        nextFunction.store(0);
-        size_t numFunctions = wasm->functions.size();
-        for (size_t i = 0; i < num; i++) {
-          doWorkers.push_back([&]() {
-            auto index = nextFunction.fetch_add(1);
-            // get the next task, if there is one
-            if (index >= numFunctions) {
-              return ThreadWorkState::Finished; // nothing left
-            }
-            Function* func = this->wasm->functions[index].get();
-            if (!func->imported()) {
-              // do the current task: run all passes on this function
-              for (auto* pass : stack) {
-                runPassOnFunction(pass, func);
-              }
-            }
-            if (index + 1 == numFunctions) {
-              return ThreadWorkState::Finished; // we did the last one
-            }
-            return ThreadWorkState::More;
-          });
-        }
-        ThreadPool::get()->work(doWorkers);
+        // size_t num = ThreadPool::get()->size();
+        // std::vector<std::function<ThreadWorkState()>> doWorkers;
+        // size_t nextFunction;
+        // nextFunction = 0;
+        // size_t numFunctions = wasm->functions.size();
+        // for (size_t i = 0; i < num; i++) {
+        //   doWorkers.push_back([&]() {
+        //     auto index = nextFunction + 1;
+        //     // get the next task, if there is one
+        //     if (index >= numFunctions) {
+        //       return ThreadWorkState::Finished; // nothing left
+        //     }
+        //     Function* func = this->wasm->functions[index].get();
+        //     if (!func->imported()) {
+        //       // do the current task: run all passes on this function
+        //       for (auto* pass : stack) {
+        //         runPassOnFunction(pass, func);
+        //       }
+        //     }
+        //     if (index + 1 == numFunctions) {
+        //       return ThreadWorkState::Finished; // we did the last one
+        //     }
+        //     return ThreadWorkState::More;
+        //   });
+        // }
+        // ThreadPool::get()->work(doWorkers);
       }
       stack.clear();
     };

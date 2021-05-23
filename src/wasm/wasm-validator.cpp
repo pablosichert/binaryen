@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <mutex>
+// #include <mutex>
 #include <set>
 #include <sstream>
 #include <unordered_set>
@@ -58,18 +58,18 @@ struct ValidationInfo {
   bool validateGlobally;
   bool quiet;
 
-  std::atomic<bool> valid;
+  bool valid;
 
   // a stream of error test for each function. we print in the right order at
   // the end, for deterministic output
   // note errors are rare/unexpected, so it's ok to use a slow mutex here
-  std::mutex mutex;
+  // std::mutex mutex;
   std::unordered_map<Function*, std::unique_ptr<std::ostringstream>> outputs;
 
-  ValidationInfo(Module& wasm) : wasm(wasm) { valid.store(true); }
+  ValidationInfo(Module& wasm) : wasm(wasm) { valid = true; }
 
   std::ostringstream& getStream(Function* func) {
-    std::unique_lock<std::mutex> lock(mutex);
+    // std::unique_lock<std::mutex> lock(mutex);
     auto iter = outputs.find(func);
     if (iter != outputs.end()) {
       return *(iter->second.get());
@@ -82,7 +82,7 @@ struct ValidationInfo {
 
   template<typename T, typename S>
   std::ostream& fail(S text, T curr, Function* func) {
-    valid.store(false);
+    valid = false;
     auto& stream = getStream(func);
     if (quiet) {
       return stream;
@@ -3031,13 +3031,13 @@ bool WasmValidator::validate(Module& module, Flags flags) {
     validateBinaryenIR(module, info);
   }
   // print all the data
-  if (!info.valid.load() && !info.quiet) {
+  if (!info.valid && !info.quiet) {
     for (auto& func : module.functions) {
       std::cerr << info.getStream(func.get()).str();
     }
     std::cerr << info.getStream(nullptr).str();
   }
-  return info.valid.load();
+  return info.valid;
 }
 
 } // namespace wasm
